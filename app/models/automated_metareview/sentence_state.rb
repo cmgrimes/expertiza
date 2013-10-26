@@ -4,7 +4,7 @@ require 'automated_metareview/constants'
 class SentenceState
   attr_accessor :broken_sentences
   def identify_sentence_state(str_with_pos_tags)
-    # puts("**** Inside identify_sentence_state #{str_with_pos_tags}")
+    puts("**** Inside identify_sentence_state #{str_with_pos_tags}")
     #break the sentence at the co-ordinating conjunction
     num_conjunctions = break_at_coordinating_conjunctions(str_with_pos_tags)
     
@@ -68,6 +68,7 @@ class SentenceState
         
     #fetching all the tokens
     for k in (0..st.length-1)
+
       ps = st[k]
       #setting the tagged string
       tagged_tokens[i] = ps
@@ -92,6 +93,8 @@ class SentenceState
     #iterating through the tokens to determine state
     prev_negative_word =""
     for j  in (0..i-1)
+      print "beginning of for loop state is "
+      puts state.to_s
       #checking type of the word
       #checking for negated words
       if(is_negative_word(tokens[j]) == NEGATED)  
@@ -125,14 +128,19 @@ class SentenceState
         if(interim_noun_verb == false and (tagged_tokens[j].include?("NN") or tagged_tokens[j].include?("PR") or tagged_tokens[j].include?("VB") or tagged_tokens[j].include?("MD")))
           interim_noun_verb = true
         end
-      end 
-      
+      end
+
+
       if(state == POSITIVE and returned_type != POSITIVE)
         state = returned_type
+
       #when state is a negative word
       elsif(state == NEGATIVE_WORD) #previous state
+        print "state is negative word (3)returned type is "
+        puts returned_type
         if(returned_type == NEGATIVE_WORD)
           #these words embellish the negation, so only if the previous word was not one of them you make it positive
+          puts "This is a negative word followed by a negative word."
           if(prev_negative_word.casecmp("NO") != 0 and prev_negative_word.casecmp("NEVER") != 0 and prev_negative_word.casecmp("NONE") != 0)
             state = POSITIVE #e.g: "not had no work..", "doesn't have no work..", "its not that it doesn't bother me..."
           else
@@ -140,6 +148,7 @@ class SentenceState
           end  
           interim_noun_verb = false #resetting         
         elsif(returned_type == NEGATIVE_DESCRIPTOR or returned_type == NEGATIVE_PHRASE)
+          puts "This is a negative word followed by a negative descriptor."
           state = POSITIVE #e.g.: "not bad", "not taken from", "I don't want nothing", "no code duplication"// ["It couldn't be more confusing.."- anomaly we dont handle this for now!]
           interim_noun_verb = false #resetting
         elsif(returned_type == SUGGESTIVE)
@@ -211,8 +220,13 @@ class SentenceState
       #setting the prevNegativeWord
       if(tokens[j].casecmp("NO") == 0 or tokens[j].casecmp("NEVER") == 0 or tokens[j].casecmp("NONE") == 0)
         prev_negative_word = tokens[j]
-      end  
-          
+      end
+    print "I am looking at this word "
+    print tokens[j]
+    print " which is supposedly in state "
+    print state.to_s
+    print " and iteration "
+    puts j.to_s
     end #end of for loop
     
     if(state == NEGATIVE_DESCRIPTOR or state == NEGATIVE_WORD or state == NEGATIVE_PHRASE)
@@ -240,8 +254,11 @@ end
 #Checking if the token is a negative token
 def is_negative_descriptor(word)
   not_negated = POSITIVE
+  puts "I'm in is negative descriptor"
   for i in (0..NEGATIVE_DESCRIPTORS.length - 1)
+    puts NEGATIVE_DESCRIPTORS[i]
     if(word.casecmp(NEGATIVE_DESCRIPTORS[i]) == 0)
+      puts "negate me please"
       not_negated =  NEGATED #indicates negation found
       break
     end  
@@ -254,8 +271,11 @@ end
 #Checking if the phrase is negative
 def is_negative_phrase(phrase)
   not_negated = POSITIVE
+  puts "I'm in is negative phrase?"
   for i in (0..NEGATIVE_PHRASES.length - 1)
+
     if(phrase.casecmp(NEGATIVE_PHRASES[i]) == 0)
+
       not_negated =  NEGATED #indicates negation found
       break
     end
