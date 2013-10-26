@@ -61,7 +61,7 @@ class SentenceState
     #checking single tokens for negated words
     st = str_with_pos_tags.split(" ")
     count = st.length
-    
+
     num_of_tokens = 0
     interim_noun_verb  = false #0 indicates no interim nouns or verbs
 
@@ -117,10 +117,10 @@ class SentenceState
           else
             state = NEGATIVE_WORD #e.g: "no it doesn't help", "no there is no use for ..."
           end
-          interim_noun_verb = false #resetting         
+          #interim_noun_verb = false #resetting
         elsif(returned_type == NEGATIVE_DESCRIPTOR or returned_type == NEGATIVE_PHRASE)
           state = POSITIVE #e.g.: "not bad", "not taken from", "I don't want nothing", "no code duplication"// ["It couldn't be more confusing.."- anomaly we dont handle this for now!]
-          interim_noun_verb = false #resetting
+          #interim_noun_verb = false #resetting
         elsif(returned_type == SUGGESTIVE)
           #e.g. " it is not too useful as people could...", what about this one?
           if(interim_noun_verb == true) #there are some words in between
@@ -128,8 +128,9 @@ class SentenceState
           else
             state = SUGGESTIVE #e.g.:"I do not(-) suggest(S) ..."
           end
-          interim_noun_verb = false #resetting
+
         end
+        interim_noun_verb = false #resetting
         #when state is a negative descriptor
       elsif(state == NEGATIVE_DESCRIPTOR)
         if(returned_type == NEGATIVE_WORD)
@@ -152,11 +153,12 @@ class SentenceState
           else
             state = POSITIVE #e.g.:"it is hard and appears to be taken from"
           end
-          interim_noun_verb = false #resetting
+          #interim_noun_verb = false #resetting
         elsif(returned_type == SUGGESTIVE)
           state = SUGGESTIVE #e.g.:"I hardly(-) suggested(S) ..."
-          interim_noun_verb = false #resetting
+
         end
+        interim_noun_verb = false #resetting
         #when state is a negative phrase
       elsif(state == NEGATIVE_PHRASE)
         if(returned_type == NEGATIVE_WORD)
@@ -168,14 +170,14 @@ class SentenceState
           interim_noun_verb = false #resetting
         elsif(returned_type == NEGATIVE_DESCRIPTOR)
           state = NEGATIVE_DESCRIPTOR #e.g."It is too short barely covering..."
-          interim_noun_verb = false #resetting
+          #interim_noun_verb = false #resetting
         elsif(returned_type == NEGATIVE_PHRASE)
           state = NEGATIVE_PHRASE #e.g.:"it is too short, taken from ..."
-          interim_noun_verb = false #resetting
+          #interim_noun_verb = false #resetting
         elsif(returned_type == SUGGESTIVE)
           state = SUGGESTIVE #e.g.:"I too short and I suggest ..."
-          interim_noun_verb = false #resetting
         end
+        interim_noun_verb = false #resetting
         #when state is suggestive
       elsif(state == SUGGESTIVE) #e.g.:"I might(S) not(-) suggest(S) ..."
         if(returned_type == NEGATIVE_DESCRIPTOR)
