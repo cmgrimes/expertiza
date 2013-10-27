@@ -12,7 +12,7 @@ class PositiveState < State
     return state, interim_noun_verb
   end
   def get_state
-    puts "positive"
+    #puts "positive"
     return POSITIVE
   end
 
@@ -35,7 +35,7 @@ class NegativeWordState < State
     return @state, @interim_noun_verb
   end
   def negative_word
-      puts "next token is negative"
+      #puts "next token is negative"
       if(@prev_negative_word.casecmp("NO") != 0 and @prev_negative_word.casecmp("NEVER") != 0 and @prev_negative_word.casecmp("NONE") != 0)
         @state = POSITIVE #e.g: "not had no work..", "doesn't have no work..", "its not that it doesn't bother me..."
       else
@@ -44,15 +44,15 @@ class NegativeWordState < State
   end
   def positive
     @state = get_state()
-    puts "next token is positive"
+    #puts "next token is positive"
   end
   def negative_descriptor
     @state = POSITIVE
-    puts "next token is negative"
+    #puts "next token is negative"
   end
   def negative_phrase
     @state = POSITIVE
-    puts "next token is negative phrase"
+    #puts "next token is negative phrase"
   end
   def suggestive
     if(@interim_noun_verb == true) #there are some words in between
@@ -60,10 +60,10 @@ class NegativeWordState < State
     else
       @state = SUGGESTIVE #e.g.:"I do not(-) suggest(S) ..."
     end
-    puts "next token is suggestive"
+    #puts "next token is suggestive"
   end
   def get_state
-    puts "negative_word"
+    #puts "negative_word"
     @state = NEGATIVE_WORD
   end
 end
@@ -91,25 +91,25 @@ class NegativePhraseState < State
     else
       @state = POSITIVE #e.g."It is too short not to contain.."
     end
-    puts "next token is negative"
+    #puts "next token is negative"
   end
   def positive
-    puts "next token is positive"
+    #puts "next token is positive"
   end
   def negative_descriptor
     @state = NEGATIVE_DESCRIPTOR
-    puts "next token is negative"
+    #puts "next token is negative"
   end
   def negative_phrase
     @state = NEGATIVE_PHRASE
-    puts "next token is negative phrase"
+    #puts "next token is negative phrase"
   end
   def suggestive
     @state = SUGGESTIVE #e.g.:"I too short and I suggest ..."
-    puts "next token is suggestive"
+    #puts "next token is suggestive"
   end
   def get_state
-    puts "negative phrase"
+    #puts "negative phrase"
     @state = NEGATIVE_PHRASE
   end
 end
@@ -131,26 +131,26 @@ class SuggestiveState < State
   end
   def negative_word
     @state = get_state()
-    puts "next token is negative"
+    #puts "next token is negative"
   end
   def positive
     @state = get_state()
-    puts "next token is positive"
+    #puts "next token is positive"
   end
   def negative_descriptor
     @state = NEGATIVE_DESCRIPTOR
-    puts "next token is negative"
+    #puts "next token is negative"
   end
   def negative_phrase
     @state = NEGATIVE_PHRASE
-    puts "next token is negative phrase"
+    #puts "next token is negative phrase"
   end
   def suggestive
     @state = get_state() #e.g.:"I too short and I suggest ..."
-    puts "next token is suggestive"
+    #puts "next token is suggestive"
   end
   def get_state
-    puts "suggestive"
+    #puts "suggestive"
     return SUGGESTIVE
   end
 end
@@ -177,11 +177,11 @@ class NegativeDescriptorState < State
     else
       @state = POSITIVE #e.g."He hardly not...."
     end
-    puts "next token is negative"
+    #puts "next token is negative"
   end
   def positive
     @state = get_state()
-    puts "next token is positive"
+    #puts "next token is positive"
   end
   def negative_descriptor
     if(@interim_noun_verb == true)#there are some words in between
@@ -189,7 +189,7 @@ class NegativeDescriptorState < State
     else
       @state = POSITIVE #e.g."It is hardly confusing..", but what about "it is a little confusing.."
     end
-    puts "next token is negative"
+    #puts "next token is negative"
   end
   def negative_phrase
     if(@interim_noun_verb == true)#there are some words in between
@@ -197,14 +197,14 @@ class NegativeDescriptorState < State
     else
       @state = POSITIVE #e.g.:"it is hard and appears to be taken from"
     end
-    puts "next token is negative phrase"
+    #puts "next token is negative phrase"
   end
   def suggestive
     @state = SUGGESTIVE #e.g.:"I hardly(-) suggested(S) ..."
-    puts "next token is suggestive"
+    #puts "next token is suggestive"
   end
   def get_state
-    puts "negative_descriptor"
+    #puts "negative_descriptor"
     return NEGATIVE_DESCRIPTOR
   end
 

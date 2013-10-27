@@ -57,19 +57,18 @@ class SentenceState
 
       #Checking if the token is a negative token
   def sentence_state(str_with_pos_tags)
-    state = POSITIVE
+
     #checking single tokens for negated words
     st = str_with_pos_tags.split(" ")
-    count = st.length
-
-    num_of_tokens = 0
-    interim_noun_verb  = false #0 indicates no interim nouns or verbs
-
-    num_of_tokens, tagged_tokens, tokens = parse_sentence_tokens(num_of_tokens, st)
 
     #iterating through the tokens to determine state
-    prev_negative_word =""
+    num_of_tokens, tagged_tokens, tokens = parse_sentence_tokens(st)
+
+    #initialize state variables so that the original sentence state is positive
+    state = POSITIVE
     state_var = State.factory(state)
+    prev_negative_word =""
+    interim_noun_verb  = false #0 indicates no interim nouns or verbs
     #next_state = state
     for j  in (0..num_of_tokens-1)
       #checking type of the word
@@ -85,17 +84,15 @@ class SentenceState
       #puts returned_type
 
       #----------------------------------------------------------------------
-      #comparing 'returnedType' with the existing STATE of the sentence clause
-      #after returnedType is identified, check its state and compare it to the existing state
+      #comparing 'current_token_type' with the existing STATE of the sentence clause
+      #after current_token_type is identified, check its state and compare it to the existing state
       #if present state is negative and an interim non-negative or non-suggestive word was found, set the flag to true
       if((state == NEGATIVE_WORD or state == NEGATIVE_DESCRIPTOR or state == NEGATIVE_PHRASE) and current_token_type == POSITIVE)
         if(interim_noun_verb == false and (tagged_tokens[j].include?("NN") or tagged_tokens[j].include?("PR") or tagged_tokens[j].include?("VB") or tagged_tokens[j].include?("MD")))
           interim_noun_verb = true
         end
       end
-      double_negative = false
-      #print "I am in the state "
-      #puts state
+
       state, interim_noun_verb = state_var.next_state(current_token_type, prev_negative_word, interim_noun_verb)
       state_var = State.factory(state)
 
@@ -113,7 +110,8 @@ class SentenceState
     return state
   end
 
-  def parse_sentence_tokens(i, st)
+  def parse_sentence_tokens(st)
+    i = 0
     tokens = Array.new
     tagged_tokens = Array.new
     #fetching all the tokens
