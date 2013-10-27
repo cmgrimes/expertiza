@@ -61,7 +61,7 @@ class SentenceState
     #checking single tokens for negated words
     st = str_with_pos_tags.split(" ")
 
-    #iterating through the tokens to determine state
+
     num_of_tokens, tagged_tokens, tokens = parse_sentence_tokens(st)
 
     #initialize state variables so that the original sentence state is positive
@@ -69,26 +69,17 @@ class SentenceState
     state_var = State.factory(state)
     prev_negative_word =""
     interim_noun_verb  = false #0 indicates no interim nouns or verbs
-    #next_state = state
+
     for j  in (0..num_of_tokens-1)
-      #checking type of the word
-      #checking for negated words or phrases
-      type_methods = [self.method(:is_negative_word), self.method(:is_negative_descriptor), self.method(:is_suggestive), self.method(:is_negative_phrase), self.method(:is_suggestive_phrase)]
-      current_token_type = POSITIVE
-      type_methods.each do |what_type_is|
-        if current_token_type == POSITIVE
-          current_token_type = what_type_is.call(tokens[j..(num_of_tokens-1)])
-        end
-      end
-      #puts tokens[j]
-      #puts returned_type
+
+      current_token_type = get_token_type(tokens[j..num_of_tokens-1])
 
       #----------------------------------------------------------------------
       #comparing 'current_token_type' with the existing STATE of the sentence clause
       #after current_token_type is identified, check its state and compare it to the existing state
       #if present state is negative and an interim non-negative or non-suggestive word was found, set the flag to true
       if((state == NEGATIVE_WORD or state == NEGATIVE_DESCRIPTOR or state == NEGATIVE_PHRASE) and current_token_type == POSITIVE)
-        if(interim_noun_verb == false and (tagged_tokens[j].include?("NN") or tagged_tokens[j].include?("PR") or tagged_tokens[j].include?("VB") or tagged_tokens[j].include?("MD")))
+        if(tagged_tokens[j].include?("NN") or tagged_tokens[j].include?("PR") or tagged_tokens[j].include?("VB") or tagged_tokens[j].include?("MD"))
           interim_noun_verb = true
         end
       end
@@ -108,6 +99,17 @@ class SentenceState
     end
 
     return state
+  end
+
+  def get_token_type(current_tokens)
+    type_methods = [self.method(:is_negative_word), self.method(:is_negative_descriptor), self.method(:is_suggestive), self.method(:is_negative_phrase), self.method(:is_suggestive_phrase)]
+    current_token_type = POSITIVE
+    type_methods.each do |what_type_is|
+      if current_token_type == POSITIVE
+        current_token_type = what_type_is.call(current_tokens)
+      end
+    end
+    current_token_type
   end
 
   def parse_sentence_tokens(st)
