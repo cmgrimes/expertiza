@@ -61,31 +61,31 @@ class SentenceState
     #checking single tokens for negated words
     st = str_with_pos_tags.split(" ")
 
-
     num_of_tokens, tagged_tokens, tokens = parse_sentence_tokens(st)
 
     #initialize state variables so that the original sentence state is positive
     state = POSITIVE
-    state_var = State.factory(state)
-    prev_negative_word =""
     interim_noun_verb  = false #0 indicates no interim nouns or verbs
+    current_state = State.factory(state, interim_noun_verb)
+    prev_negative_word =""
 
     for j  in (0..num_of_tokens-1)
 
       current_token_type = get_token_type(tokens[j..num_of_tokens-1])
-
+      tagged_tokens_true = false
       #----------------------------------------------------------------------
       #comparing 'current_token_type' with the existing STATE of the sentence clause
       #after current_token_type is identified, check its state and compare it to the existing state
       #if present state is negative and an interim non-negative or non-suggestive word was found, set the flag to true
-      if((state == NEGATIVE_WORD or state == NEGATIVE_DESCRIPTOR or state == NEGATIVE_PHRASE) and current_token_type == POSITIVE)
+      #if((state == NEGATIVE_WORD or state == NEGATIVE_DESCRIPTOR or state == NEGATIVE_PHRASE) and current_token_type == POSITIVE)
         if(tagged_tokens[j].include?("NN") or tagged_tokens[j].include?("PR") or tagged_tokens[j].include?("VB") or tagged_tokens[j].include?("MD"))
-          interim_noun_verb = true
+           tagged_tokens_true = true
         end
-      end
+      #end
 
-      state, interim_noun_verb = state_var.next_state(current_token_type, prev_negative_word, interim_noun_verb)
-      state_var = State.factory(state)
+      state = current_state.next_state(current_token_type, prev_negative_word, tagged_tokens_true)
+      current_state = State.factory(state, interim_noun_verb)
+      #State now_state = State.new(state, interim_noun_verb)
 
       #setting the prevNegativeWord
       if(tokens[j].casecmp("NO") == 0 or tokens[j].casecmp("NEVER") == 0 or tokens[j].casecmp("NONE") == 0)
@@ -211,7 +211,6 @@ class SentenceState
     not_suggestive = POSITIVE
     if word_array.size > 1
       phrase = word_array[0]+" "+word_array[1]
-
       for i in (0..SUGGESTIVE_PHRASES.length - 1)
         if(phrase.casecmp(SUGGESTIVE_PHRASES[i]) == 0)
           not_suggestive =  SUGGESTIVE #indicates negation found
