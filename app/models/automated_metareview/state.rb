@@ -1,10 +1,15 @@
 require 'automated_metareview/negations'
 require 'automated_metareview/constants'
+
 class State
   @interim_noun_verb
+
+  # Make a new state instance based on the type of the current_state
   def State.factory(state)
     {POSITIVE => PositiveState, NEGATIVE_DESCRIPTOR => NegativeDescriptorState, NEGATIVE_PHRASE => NegativePhraseState, SUGGESTIVE => SuggestiveState, NEGATIVE_WORD => NegativeWordState}[state].new()
   end
+
+  #State is responsible for keeping track of interim words
   def initialize
     @interim_noun_verb = false
   end
@@ -14,6 +19,8 @@ class State
   def set_interim_noun_verb(interim_noun_verb)
     @interim_noun_verb = interim_noun_verb
   end
+
+  #if there is an interim word between two states, it will become state1 else it will be state2
   def if_interim_then_state_is(state1, state2)
     if @interim_noun_verb   #there are some words in between
       state = state1
@@ -23,36 +30,61 @@ class State
     state
   end
 end
+
+#This is a type of state where the sentence clause is positive
 class PositiveState < State
   @state
-  # @param [int] current_token_type
-  def next_state(current_token_type, prev_negative_word)
-    @state = get_state()
-    @state = current_token_type
-  end
-  def get_state
-    #puts "positive"
-    POSITIVE
-  end
-
-end
-class NegativeWordState < State
-
-  @state
   @prev_negative_word
-
-
   def next_state(current_token_type, prev_negative_word)
     @prev_negative_word = prev_negative_word
-
     method = {POSITIVE => self.method(:positive), NEGATIVE_DESCRIPTOR => self.method(:negative_descriptor), NEGATIVE_PHRASE => self.method(:negative_phrase), SUGGESTIVE => self.method(:suggestive), NEGATIVE_WORD => self.method(:negative_word)}[current_token_type]
-
     method.call()
 
     if @state != POSITIVE
       set_interim_noun_verb(false) #resetting
     end
-    
+    @state
+  end
+  def negative_word
+    #puts "next token is negative"
+    @state = NEGATIVE_WORD
+  end
+  def positive
+
+    @state = POSITIVE
+    #puts "next token is positive"
+  end
+  def negative_descriptor
+    @state = NEGATIVE_DESCRIPTOR
+    #puts "next token is negative"
+  end
+  def negative_phrase
+    @state = NEGATIVE_PHRASE
+    #puts "next token is negative phrase"
+  end
+  def suggestive
+    @state = SUGGESTIVE
+    #puts "next token is suggestive"
+  end
+  def get_state
+    #puts "positive"
+    POSITIVE
+  end
+end
+
+#This is a type of state where the sentence clause is negative because of a negative word
+class NegativeWordState < State
+
+  @state
+  @prev_negative_word
+  def next_state(current_token_type, prev_negative_word)
+    @prev_negative_word = prev_negative_word
+    method = {POSITIVE => self.method(:positive), NEGATIVE_DESCRIPTOR => self.method(:negative_descriptor), NEGATIVE_PHRASE => self.method(:negative_phrase), SUGGESTIVE => self.method(:suggestive), NEGATIVE_WORD => self.method(:negative_word)}[current_token_type]
+    method.call()
+
+    if @state != POSITIVE
+      set_interim_noun_verb(false) #resetting
+    end
     @state
   end
   def negative_word
