@@ -114,17 +114,40 @@ class NegativePhraseState < State
   end
 end
 class SuggestiveState < State
-  def next_state(current_token_type, prev_negative_word, interim_noun_verb)
-    state = get_state()
-    if(current_token_type == NEGATIVE_DESCRIPTOR)
-      state = NEGATIVE_DESCRIPTOR
-    elsif(current_token_type == NEGATIVE_PHRASE)
-      state = NEGATIVE_PHRASE
-    end
-    #e.g.:"I suggest you don't.." -> suggestive
-    interim_noun_verb = false #resetting
+  @state
+  @prev_negative_word
+  @interim_noun_verb
 
-    return state , interim_noun_verb
+  def next_state(current_token_type, prev_negative_word, interim_noun_verb)
+    @prev_negative_word = prev_negative_word
+    @interim_noun_verb = interim_noun_verb
+    method = {POSITIVE => self.method(:positive), NEGATIVE_DESCRIPTOR => self.method(:negative_descriptor), NEGATIVE_PHRASE => self.method(:negative_phrase), SUGGESTIVE => self.method(:suggestive), NEGATIVE_WORD => self.method(:negative_word)}[current_token_type]
+
+    method.call()
+
+    @interim_noun_verb = false #resetting
+
+    return @state, @interim_noun_verb
+  end
+  def negative_word
+    @state = get_state()
+    puts "next token is negative"
+  end
+  def positive
+    @state = get_state()
+    puts "next token is positive"
+  end
+  def negative_descriptor
+    @state = NEGATIVE_DESCRIPTOR
+    puts "next token is negative"
+  end
+  def negative_phrase
+    @state = NEGATIVE_PHRASE
+    puts "next token is negative phrase"
+  end
+  def suggestive
+    @state = get_state() #e.g.:"I too short and I suggest ..."
+    puts "next token is suggestive"
   end
   def get_state
     puts "suggestive"
