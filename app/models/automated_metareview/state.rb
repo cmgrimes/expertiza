@@ -1,21 +1,15 @@
 require 'automated_metareview/negations'
 require 'automated_metareview/constants'
 class State
-  @current_token_type
   def State.factory(state)
     {POSITIVE => PositiveState, NEGATIVE_DESCRIPTOR => NegativeDescriptorState, NEGATIVE_PHRASE => NegativePhraseState, SUGGESTIVE => SuggestiveState, NEGATIVE_WORD => NegativeWordState}[state].new
   end
 end
 class PositiveState < State
-  @state
   def next_state(current_token_type, prev_negative_word, interim_noun_verb)
     state = get_state()
     state = current_token_type
-
-
-
     return state, interim_noun_verb
-
   end
   def get_state
     puts "positive"
@@ -24,35 +18,53 @@ class PositiveState < State
 
 end
 class NegativeWordState < State
+
+  @state
+  @prev_negative_word
+  @interim_noun_verb
+
   def next_state(current_token_type, prev_negative_word, interim_noun_verb)
-    state = get_state()
-    if(current_token_type == NEGATIVE_WORD)
-      #these words embellish the negation, so only if the previous word was not one of them you make it positive
-      if(prev_negative_word.casecmp("NO") != 0 and prev_negative_word.casecmp("NEVER") != 0 and prev_negative_word.casecmp("NONE") != 0)
-        state = POSITIVE #e.g: "not had no work..", "doesn't have no work..", "its not that it doesn't bother me..."
-      else
-        state = NEGATIVE_WORD #e.g: "no it doesn't help", "no there is no use for ..."
-      end
-      #interim_noun_verb = false #resetting
-    elsif(current_token_type == NEGATIVE_DESCRIPTOR or current_token_type == NEGATIVE_PHRASE)
-      state = POSITIVE #e.g.: "not bad", "not taken from", "I don't want nothing", "no code duplication"// ["It couldn't be more confusing.."- anomaly we dont handle this for now!]
-      #interim_noun_verb = false #resetting
-    elsif(current_token_type == SUGGESTIVE)
-      #e.g. " it is not too useful as people could...", what about this one?
-      if(interim_noun_verb == true) #there are some words in between
-        state = NEGATIVE_WORD
-      else
-        state = SUGGESTIVE #e.g.:"I do not(-) suggest(S) ..."
-      end
+    @prev_negative_word = prev_negative_word
+    @interim_noun_verb = interim_noun_verb
+    method = {POSITIVE => self.method(:positive), NEGATIVE_DESCRIPTOR => self.method(:negative_descriptor), NEGATIVE_PHRASE => self.method(:negative_phrase), SUGGESTIVE => self.method(:suggestive), NEGATIVE_WORD => self.method(:negative_word)}[current_token_type]
 
+    get_state()
+    method.call()
+
+    @interim_noun_verb = false #resetting
+
+    return @state, @interim_noun_verb
+  end
+  def negative_word
+      puts "next token is negative"
+      if(@prev_negative_word.casecmp("NO") != 0 and @prev_negative_word.casecmp("NEVER") != 0 and @prev_negative_word.casecmp("NONE") != 0)
+        @state = POSITIVE #e.g: "not had no work..", "doesn't have no work..", "its not that it doesn't bother me..."
+      else
+        @state = NEGATIVE_WORD #e.g: "no it doesn't help", "no there is no use for ..."
+      end
+  end
+  def positive
+    puts "next token is positive"
+  end
+  def negative_descriptor
+    @state = POSITIVE
+    puts "next token is negative"
+  end
+  def negative_phrase
+    @state = POSITIVE
+    puts "next token is negative phrase"
+  end
+  def suggestive
+    if(@interim_noun_verb == true) #there are some words in between
+      @state = NEGATIVE_WORD
+    else
+      @state = SUGGESTIVE #e.g.:"I do not(-) suggest(S) ..."
     end
-    interim_noun_verb = false #resetting
-
-    return state, interim_noun_verb
+    puts "next token is suggestive"
   end
   def get_state
     puts "negative_word"
-    return NEGATIVE_WORD
+    @state = NEGATIVE_WORD
   end
 end
 class NegativePhraseState < State
