@@ -66,37 +66,26 @@ class SentenceState
     #initialize state variables so that the original sentence state is positive
     state = POSITIVE
     interim_noun_verb  = false #0 indicates no interim nouns or verbs
-    current_state = State.factory(state, interim_noun_verb)
-    prev_negative_word =""
+    current_state = State.factory(state)
+    prev_negative_word = false
 
     for j  in (0..num_of_tokens-1)
-
+      #get current token type
       current_token_type = get_token_type(tokens[j..num_of_tokens-1])
-      tagged_tokens_true = false
-      #----------------------------------------------------------------------
-      #comparing 'current_token_type' with the existing STATE of the sentence clause
-      #after current_token_type is identified, check its state and compare it to the existing state
-      #if present state is negative and an interim non-negative or non-suggestive word was found, set the flag to true
-      #if((state == NEGATIVE_WORD or state == NEGATIVE_DESCRIPTOR or state == NEGATIVE_PHRASE) and current_token_type == POSITIVE)
-        if(tagged_tokens[j].include?("NN") or tagged_tokens[j].include?("PR") or tagged_tokens[j].include?("VB") or tagged_tokens[j].include?("MD"))
-           tagged_tokens_true = true
-        end
-      #end
 
-      state = current_state.next_state(current_token_type, prev_negative_word, tagged_tokens_true)
-      current_state = State.factory(state, interim_noun_verb)
-      #State now_state = State.new(state, interim_noun_verb)
+      #Have State class get current state based on current state, current_token_type, and if there was a prev_negative_word
+      current_state = State.factory(current_state.next_state(current_token_type, prev_negative_word))
 
       #setting the prevNegativeWord
-      if(tokens[j].casecmp("NO") == 0 or tokens[j].casecmp("NEVER") == 0 or tokens[j].casecmp("NONE") == 0)
-        prev_negative_word = tokens[j]
+      NEGATIVE_EMPHASIS_WORDS.each do |e|
+        if(tokens[j].casecmp(e))
+          prev_negative_word = true
+        end
       end
 
     end #end of for loop
 
-    if(state == NEGATIVE_DESCRIPTOR or state == NEGATIVE_WORD or state == NEGATIVE_PHRASE)
-      state = NEGATED
-    end
+    state = current_state.get_state()
 
     return state
   end

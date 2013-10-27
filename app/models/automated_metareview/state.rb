@@ -2,11 +2,11 @@ require 'automated_metareview/negations'
 require 'automated_metareview/constants'
 class State
   @interim_noun_verb
-  def State.factory(state, interim_noun_verb)
-    {POSITIVE => PositiveState, NEGATIVE_DESCRIPTOR => NegativeDescriptorState, NEGATIVE_PHRASE => NegativePhraseState, SUGGESTIVE => SuggestiveState, NEGATIVE_WORD => NegativeWordState}[state].new(interim_noun_verb)
+  def State.factory(state)
+    {POSITIVE => PositiveState, NEGATIVE_DESCRIPTOR => NegativeDescriptorState, NEGATIVE_PHRASE => NegativePhraseState, SUGGESTIVE => SuggestiveState, NEGATIVE_WORD => NegativeWordState}[state].new()
   end
-  def initialize(interim_noun_verb)
-    @interim_noun_verb = interim_noun_verb
+  def initialize
+    @interim_noun_verb = false
   end
   def get_interim_noun_verb
     return @interim_noun_verb
@@ -49,7 +49,7 @@ class NegativeWordState < State
   end
   def negative_word
       #puts "next token is negative"
-      if(@prev_negative_word.casecmp("NO") != 0 and @prev_negative_word.casecmp("NEVER") != 0 and @prev_negative_word.casecmp("NONE") != 0)
+      if(@prev_negative_word == true)
         @state = POSITIVE #e.g: "not had no work..", "doesn't have no work..", "its not that it doesn't bother me..."
       else
         @state = NEGATIVE_WORD #e.g: "no it doesn't help", "no there is no use for ..."
@@ -57,7 +57,7 @@ class NegativeWordState < State
   end
   def positive
     set_interim_noun_verb(true)
-    @state = get_state()
+    @state = NEGATIVE_WORD
     #puts "next token is positive"
   end
   def negative_descriptor
@@ -69,7 +69,7 @@ class NegativeWordState < State
     #puts "next token is negative phrase"
   end
   def suggestive
-    if(get_interim_noun_verb() == true) #there are some words in between
+    if get_interim_noun_verb() == true #there are some words in between
       @state = NEGATIVE_WORD
     else
       @state = SUGGESTIVE #e.g.:"I do not(-) suggest(S) ..."
@@ -78,7 +78,7 @@ class NegativeWordState < State
   end
   def get_state
     #puts "negative_word"
-    @state = NEGATIVE_WORD
+    @state = NEGATED
   end
 end
 class NegativePhraseState < State
@@ -111,7 +111,7 @@ class NegativePhraseState < State
   end
   def positive
     set_interim_noun_verb(true)
-    @state = get_state()
+    @state = NEGATIVE_PHRASE
     #puts "next token is positive"
   end
   def negative_descriptor
@@ -128,7 +128,7 @@ class NegativePhraseState < State
   end
   def get_state
     #puts "negative phrase"
-    @state = NEGATIVE_PHRASE
+    @state = NEGATED
   end
 end
 class SuggestiveState < State
@@ -152,7 +152,7 @@ class SuggestiveState < State
     #puts "next token is negative"
   end
   def positive
-    @state = get_state()
+    @state = SUGGESTIVE
     #puts "next token is positive"
   end
   def negative_descriptor
@@ -200,7 +200,7 @@ class NegativeDescriptorState < State
   end
   def positive
     set_interim_noun_verb(true)
-    @state = get_state()
+    @state = NEGATIVE_DESCRIPTOR
     #puts "next token is positive"
   end
   def negative_descriptor
@@ -225,7 +225,7 @@ class NegativeDescriptorState < State
   end
   def get_state
     #puts "negative_descriptor"
-    return NEGATIVE_DESCRIPTOR
+    return NEGATED
   end
 
 end
