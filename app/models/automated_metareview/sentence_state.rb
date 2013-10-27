@@ -72,56 +72,23 @@ class SentenceState
 
     #iterating through the tokens to determine state
     prev_negative_word =""
-
     for j  in (0..num_of_tokens-1)
-      word_methods = [self.method(:is_negative_word), self.method(:is_negative_descriptor), self.method(:is_suggestive)]
-      phrase_methods = [self.method(:is_negative_phrase), self.method(:is_suggestive_phrase)]
+      word_methods = [self.method(:is_negative_word), self.method(:is_negative_descriptor), self.method(:is_suggestive), self.method(:is_negative_phrase), self.method(:is_suggestive_phrase)]
       returned_type = POSITIVE
-      #if it is a word
-      word_methods.each do |m|
-        if returned_type == POSITIVE
-          returned_type = m.call(tokens[j])
-        end
-      end
-      #if it is a phrase
-      if(j+1 < count && !tokens[j].nil? && !tokens[j+1].nil?)
-        phrase_methods.each do |m|
-          if returned_type == POSITIVE
-            returned_type = m.call(tokens[j]+" "+tokens[j+1])
-          end
-        end
-      end
-
-      puts tokens[j]
-      puts returned_type
-
       #checking type of the word
       #checking for negated words
-      %%
-      if(is_negative_word(tokens[j]) == NEGATED)
-        returned_type = NEGATIVE_WORD
-        #checking for a negative descriptor (indirect indicators of negation)
-      elsif(is_negative_descriptor(tokens[j]) == NEGATED)
-        returned_type = NEGATIVE_DESCRIPTOR
-        #2-gram phrases of negative phrases
-      elsif(is_suggestive(tokens[j]) == SUGGESTIVE)
-        returned_type = SUGGESTIVE
-        #2-gram phrases suggestion phrases
-      elsif(j+1 < count && !tokens[j].nil? && !tokens[j+1].nil? &&
-          is_negative_phrase(tokens[j]+" "+tokens[j+1]) == NEGATIVE_PHRASE)
-        returned_type = NEGATIVE_PHRASE
-        j = j+1
-        #if suggestion word is found
-
-      elsif(j+1 < count && !tokens[j].nil? && !tokens[j+1].nil? &&
-          is_suggestive_phrase(tokens[j]+" "+tokens[j+1]) == SUGGESTIVE)
-        returned_type = SUGGESTIVE
-        j = j+1
-        #else set to positive
-      else
-        returned_type = POSITIVE
+      word_methods.each do |m|
+        if returned_type == POSITIVE
+          returned_type = m.call(tokens[j..(num_of_tokens-1)])
+        end
       end
-      %
+
+
+      #puts tokens[j]
+      #puts returned_type
+
+
+
       #----------------------------------------------------------------------
       #comparing 'returnedType' with the existing STATE of the sentence clause
       #after returnedType is identified, check its state and compare it to the existing state
@@ -261,7 +228,8 @@ class SentenceState
 #------------------------------------------#------------------------------------------
 
 #Checking if the token is a negative token
-  def is_negative_word(word)
+  def is_negative_word(word_array)
+    word = word_array.first
     not_negated = POSITIVE
     for i in (0..NEGATED_WORDS.length - 1)
       if(word.casecmp(NEGATED_WORDS[i]) == 0)
@@ -274,7 +242,8 @@ class SentenceState
 #------------------------------------------#------------------------------------------
 
 #Checking if the token is a negative token
-  def is_negative_descriptor(word)
+  def is_negative_descriptor(word_array)
+    word = word_array.first
     not_negated = POSITIVE
     for i in (0..NEGATIVE_DESCRIPTORS.length - 1)
       if(word.casecmp(NEGATIVE_DESCRIPTORS[i]) == 0)
@@ -288,20 +257,26 @@ class SentenceState
 #------------------------------------------#------------------------------------------
 
 #Checking if the phrase is negative
-  def is_negative_phrase(phrase)
+  def is_negative_phrase(word_array)
     not_negated = POSITIVE
-    for i in (0..NEGATIVE_PHRASES.length - 1)
-      if(phrase.casecmp(NEGATIVE_PHRASES[i]) == 0)
-        not_negated =  NEGATIVE_PHRASE #indicates negation found
-        break
+    if word_array.size > 1
+      phrase = word_array[0]+" "+word_array[1]
+
+      for i in (0..NEGATIVE_PHRASES.length - 1)
+        if(phrase.casecmp(NEGATIVE_PHRASES[i]) == 0)
+          not_negated =  NEGATIVE_PHRASE #indicates negation found
+          break
+        end
       end
     end
+
     return not_negated
   end
 
 #------------------------------------------#------------------------------------------
 #Checking if the token is a suggestive token
-  def is_suggestive(word)
+  def is_suggestive(word_array)
+    word = word_array.first
     not_suggestive = POSITIVE
     #puts "inside is_suggestive for token:: #{word}"
     for i in (0..SUGGESTIVE_WORDS.length - 1)
@@ -315,12 +290,16 @@ class SentenceState
 #------------------------------------------#------------------------------------------
 
 #Checking if the PHRASE is suggestive
-  def is_suggestive_phrase(phrase)
+  def is_suggestive_phrase(word_array)
     not_suggestive = POSITIVE
-    for i in (0..SUGGESTIVE_PHRASES.length - 1)
-      if(phrase.casecmp(SUGGESTIVE_PHRASES[i]) == 0)
-        not_suggestive =  SUGGESTIVE #indicates negation found
-        break
+    if word_array.size > 1
+      phrase = word_array[0]+" "+word_array[1]
+
+      for i in (0..SUGGESTIVE_PHRASES.length - 1)
+        if(phrase.casecmp(SUGGESTIVE_PHRASES[i]) == 0)
+          not_suggestive =  SUGGESTIVE #indicates negation found
+          break
+        end
       end
     end
     return not_suggestive
