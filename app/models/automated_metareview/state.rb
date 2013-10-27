@@ -10,9 +10,8 @@ class PositiveState < State
   @state
   def next_state(current_token_type, prev_negative_word, interim_noun_verb)
     state = get_state()
-    if(current_token_type != POSITIVE)
-      state = current_token_type
-    end
+    state = current_token_type
+
 
 
     return state, interim_noun_verb
