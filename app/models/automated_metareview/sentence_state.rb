@@ -67,120 +67,37 @@ class SentenceState
 
     num_of_tokens, tagged_tokens, tokens = parse_sentence_tokens(num_of_tokens, st)
 
-
-
-
     #iterating through the tokens to determine state
     prev_negative_word =""
+    state_var = State.factory(state)
+    #next_state = state
     for j  in (0..num_of_tokens-1)
-      word_methods = [self.method(:is_negative_word), self.method(:is_negative_descriptor), self.method(:is_suggestive), self.method(:is_negative_phrase), self.method(:is_suggestive_phrase)]
-      returned_type = POSITIVE
       #checking type of the word
-      #checking for negated words
-      word_methods.each do |m|
-        if returned_type == POSITIVE
-          returned_type = m.call(tokens[j..(num_of_tokens-1)])
+      #checking for negated words or phrases
+      type_methods = [self.method(:is_negative_word), self.method(:is_negative_descriptor), self.method(:is_suggestive), self.method(:is_negative_phrase), self.method(:is_suggestive_phrase)]
+      current_token_type = POSITIVE
+      type_methods.each do |what_type_is|
+        if current_token_type == POSITIVE
+          current_token_type = what_type_is.call(tokens[j..(num_of_tokens-1)])
         end
       end
-
-
       #puts tokens[j]
       #puts returned_type
-
-
 
       #----------------------------------------------------------------------
       #comparing 'returnedType' with the existing STATE of the sentence clause
       #after returnedType is identified, check its state and compare it to the existing state
       #if present state is negative and an interim non-negative or non-suggestive word was found, set the flag to true
-      if((state == NEGATIVE_WORD or state == NEGATIVE_DESCRIPTOR or state == NEGATIVE_PHRASE) and returned_type == POSITIVE)
+      if((state == NEGATIVE_WORD or state == NEGATIVE_DESCRIPTOR or state == NEGATIVE_PHRASE) and current_token_type == POSITIVE)
         if(interim_noun_verb == false and (tagged_tokens[j].include?("NN") or tagged_tokens[j].include?("PR") or tagged_tokens[j].include?("VB") or tagged_tokens[j].include?("MD")))
           interim_noun_verb = true
         end
       end
-
-      if(state == POSITIVE and returned_type != POSITIVE)
-        state = returned_type
-        #when state is a negative word
-      elsif(state == NEGATIVE_WORD) #previous state
-        if(returned_type == NEGATIVE_WORD)
-          #these words embellish the negation, so only if the previous word was not one of them you make it positive
-          if(prev_negative_word.casecmp("NO") != 0 and prev_negative_word.casecmp("NEVER") != 0 and prev_negative_word.casecmp("NONE") != 0)
-            state = POSITIVE #e.g: "not had no work..", "doesn't have no work..", "its not that it doesn't bother me..."
-          else
-            state = NEGATIVE_WORD #e.g: "no it doesn't help", "no there is no use for ..."
-          end
-          #interim_noun_verb = false #resetting
-        elsif(returned_type == NEGATIVE_DESCRIPTOR or returned_type == NEGATIVE_PHRASE)
-          state = POSITIVE #e.g.: "not bad", "not taken from", "I don't want nothing", "no code duplication"// ["It couldn't be more confusing.."- anomaly we dont handle this for now!]
-          #interim_noun_verb = false #resetting
-        elsif(returned_type == SUGGESTIVE)
-          #e.g. " it is not too useful as people could...", what about this one?
-          if(interim_noun_verb == true) #there are some words in between
-            state = NEGATIVE_WORD
-          else
-            state = SUGGESTIVE #e.g.:"I do not(-) suggest(S) ..."
-          end
-
-        end
-        interim_noun_verb = false #resetting
-        #when state is a negative descriptor
-      elsif(state == NEGATIVE_DESCRIPTOR)
-        if(returned_type == NEGATIVE_WORD)
-          if(interim_noun_verb == true)#there are some words in between
-            state = NEGATIVE_WORD #e.g: "hard(-) to understand none(-) of the comments"
-          else
-            state = POSITIVE #e.g."He hardly not...."
-          end
-          interim_noun_verb = false #resetting
-        elsif(returned_type == NEGATIVE_DESCRIPTOR)
-          if(interim_noun_verb == true)#there are some words in between
-            state = NEGATIVE_DESCRIPTOR #e.g:"there is barely any code duplication"
-          else
-            state = POSITIVE #e.g."It is hardly confusing..", but what about "it is a little confusing.."
-          end
-          interim_noun_verb = false #resetting
-        elsif(returned_type == NEGATIVE_PHRASE)
-          if(interim_noun_verb == true)#there are some words in between
-            state = NEGATIVE_PHRASE #e.g:"there is barely any code duplication"
-          else
-            state = POSITIVE #e.g.:"it is hard and appears to be taken from"
-          end
-                                    #interim_noun_verb = false #resetting
-        elsif(returned_type == SUGGESTIVE)
-          state = SUGGESTIVE #e.g.:"I hardly(-) suggested(S) ..."
-
-        end
-        interim_noun_verb = false #resetting
-        #when state is a negative phrase
-      elsif(state == NEGATIVE_PHRASE)
-        if(returned_type == NEGATIVE_WORD)
-          if(interim_noun_verb == true)#there are some words in between
-            state = NEGATIVE_WORD #e.g."It is too short the text and doesn't"
-          else
-            state = POSITIVE #e.g."It is too short not to contain.."
-          end
-          interim_noun_verb = false #resetting
-        elsif(returned_type == NEGATIVE_DESCRIPTOR)
-          state = NEGATIVE_DESCRIPTOR #e.g."It is too short barely covering..."
-                                    #interim_noun_verb = false #resetting
-        elsif(returned_type == NEGATIVE_PHRASE)
-          state = NEGATIVE_PHRASE #e.g.:"it is too short, taken from ..."
-                                    #interim_noun_verb = false #resetting
-        elsif(returned_type == SUGGESTIVE)
-          state = SUGGESTIVE #e.g.:"I too short and I suggest ..."
-        end
-        interim_noun_verb = false #resetting
-        #when state is suggestive
-      elsif(state == SUGGESTIVE) #e.g.:"I might(S) not(-) suggest(S) ..."
-        if(returned_type == NEGATIVE_DESCRIPTOR)
-          state = NEGATIVE_DESCRIPTOR
-        elsif(returned_type == NEGATIVE_PHRASE)
-          state = NEGATIVE_PHRASE
-        end
-        #e.g.:"I suggest you don't.." -> suggestive
-        interim_noun_verb = false #resetting
-      end
+      double_negative = false
+      #print "I am in the state "
+      #puts state
+      state, interim_noun_verb = state_var.next_state(current_token_type, prev_negative_word, interim_noun_verb)
+      state_var = State.factory(state)
 
       #setting the prevNegativeWord
       if(tokens[j].casecmp("NO") == 0 or tokens[j].casecmp("NEVER") == 0 or tokens[j].casecmp("NONE") == 0)
@@ -194,6 +111,40 @@ class SentenceState
     end
 
     return state
+  end
+  def is_suggestive_state(state, current_token_type, interim_noun_verb)
+    state = state
+    if (state == NEGATIVE_WORD && current_token_type == SUGGESTIVE)
+      if(interim_noun_verb == true) #there are some words in between
+        state = NEGATIVE_WORD
+      else
+        state = SUGGESTIVE #e.g.:"I do not(-) suggest(S) ..."
+      end
+    end
+    return state
+  end
+
+  def is_double_negative(state, current_token_type, prev_negative_word, interim_noun_verb)
+    state = state
+    if state == NEGATIVE_WORD
+      if(prev_negative_word.casecmp("NO") != 0 and prev_negative_word.casecmp("NEVER") != 0 and prev_negative_word.casecmp("NONE") != 0)
+        double_negative = true
+      else
+        double_negative = false
+      end
+      if((current_token_type == NEGATIVE_WORD && double_negative)or current_token_type == NEGATIVE_DESCRIPTOR or current_token_type == NEGATIVE_PHRASE)
+        state = POSITIVE #e.g.: "not bad", "not taken from", "I don't want nothing", "no code duplication"// ["It couldn't be more confusing.."- anomaly we dont handle this for now!]
+      end
+    end
+    return state
+  end
+  def if_negative_with_interim(interim_noun_verb, state,current_token_type)
+    if (interim_noun_verb == true) #there are some words in between
+      state = current_token_type #e.g."It is too short the text and doesn't"
+    else
+      state = POSITIVE #e.g."It is too short not to contain.."
+    end
+    state
   end
 
   def parse_sentence_tokens(i, st)
