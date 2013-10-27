@@ -112,40 +112,6 @@ class SentenceState
 
     return state
   end
-  def is_suggestive_state(state, current_token_type, interim_noun_verb)
-    state = state
-    if (state == NEGATIVE_WORD && current_token_type == SUGGESTIVE)
-      if(interim_noun_verb == true) #there are some words in between
-        state = NEGATIVE_WORD
-      else
-        state = SUGGESTIVE #e.g.:"I do not(-) suggest(S) ..."
-      end
-    end
-    return state
-  end
-
-  def is_double_negative(state, current_token_type, prev_negative_word, interim_noun_verb)
-    state = state
-    if state == NEGATIVE_WORD
-      if(prev_negative_word.casecmp("NO") != 0 and prev_negative_word.casecmp("NEVER") != 0 and prev_negative_word.casecmp("NONE") != 0)
-        double_negative = true
-      else
-        double_negative = false
-      end
-      if((current_token_type == NEGATIVE_WORD && double_negative)or current_token_type == NEGATIVE_DESCRIPTOR or current_token_type == NEGATIVE_PHRASE)
-        state = POSITIVE #e.g.: "not bad", "not taken from", "I don't want nothing", "no code duplication"// ["It couldn't be more confusing.."- anomaly we dont handle this for now!]
-      end
-    end
-    return state
-  end
-  def if_negative_with_interim(interim_noun_verb, state,current_token_type)
-    if (interim_noun_verb == true) #there are some words in between
-      state = current_token_type #e.g."It is too short the text and doesn't"
-    else
-      state = POSITIVE #e.g."It is too short not to contain.."
-    end
-    state
-  end
 
   def parse_sentence_tokens(i, st)
     tokens = Array.new
