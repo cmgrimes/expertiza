@@ -2,62 +2,24 @@ require 'automated_metareview/negations'
 require 'automated_metareview/constants'
 
 class SentenceState
-  attr_accessor :broken_sentences
+  #attr_accessor :broken_sentences
   def identify_sentence_state(str_with_pos_tags)
     # puts("**** Inside identify_sentence_state #{str_with_pos_tags}")
     #break the sentence at the co-ordinating conjunction
-    num_conjunctions = break_at_coord_conjunctions(str_with_pos_tags)
+    sentence = TaggedSentence.new(str_with_pos_tags)
+    sentences_sections = sentence.break_at_coord_conjunctions()
 
     states_array = Array.new
-    @broken_sentences.nil? ?
-        states_array[0] = sentence_state(str_with_pos_tags) :
-        (0..num_conjunctions).each do |i|
-          unless @broken_sentences[i].nil?
-            states_array[i] = sentence_state(@broken_sentences[i])
-          end
-        end
+    i = 0
+    sentences_sections.each do |section_tokens|
+      states_array[i] = sentence_state(section_tokens)
+      i+=1
+    end
+    
     states_array
   end #end of the methods
-      #------------------------------------------#------------------------------------------
-  def break_at_coord_conjunctions(str_with_pos_tags)
-    st = str_with_pos_tags.split(' ')
-    counter = 0
 
-    @broken_sentences = Array.new
-    #if the sentence contains a co-ordinating conjunction
-    if str_with_pos_tags.include?('CC')
-      counter = 0
-      temp = ''
-      st.each do |ps|
-        if !ps.nil? and ps.include?('CC')
-          @broken_sentences[counter] = temp #for "run/NN on/IN..."
-          counter+=1
-          temp = ps[0..ps.index('/')]
-          #the CC or IN goes as part of the following sentence
-        elsif !ps.nil? and !ps.include?('CC')
-          temp += ' '+ ps[0..ps.index('/')]
-        end
-      end
-      unless temp.empty? #setting the last sentence segment
-        @broken_sentences[counter] = temp
-        counter+=1
-      end
-    else
-      @broken_sentences[counter] = str_with_pos_tags
-      counter+=1
-    end
-    counter
-  end #end of the method
-      #------------------------------------------#------------------------------------------
-
-      #Checking if the token is a negative token
-  def sentence_state(str_with_pos_tags)
-
-    #checking single tokens for negated words
-    st = str_with_pos_tags.split(' ')
-
-    tokens = parse_sentence_tokens(st)
-
+  def sentence_state(tokens) #str_with_pos_tags)
     #initialize state variables so that the original sentence state is positive
     state = POSITIVE
     current_state = State.factory(state)
@@ -81,7 +43,6 @@ class SentenceState
 
     current_state.get_state()
   end
-
   def get_token_type(current_token)
     type_methods = [self.method(:is_negative_word), self.method(:is_negative_descriptor), self.method(:is_suggestive), self.method(:is_negative_phrase), self.method(:is_suggestive_phrase)]
     current_token_type = POSITIVE
@@ -94,32 +55,7 @@ class SentenceState
     current_token_type
   end
 
-  def parse_sentence_tokens(sentence_pieces)
-    num_tokens = 0
-    tokens = Array.new
 
-    punctuation = %w(. , ! ;)
-    sentence_pieces.each do |sp|
-      #remove tag from sentence word
-      if sp.include?('/')
-        sp = sp[0..sp.index('/')-1]
-      end
-
-      valid_token = true
-      punctuation.each do |p|
-        if sp.include?(p)
-          valid_token = false
-          break
-        end
-      end
-      if valid_token
-        tokens[num_tokens] = sp
-        num_tokens+=1
-      end
-    end
-    #end of the for loop
-    tokens
-  end
 
 #------------------------------------------#------------------------------------------
 
@@ -155,7 +91,6 @@ class SentenceState
 
 #Checking if the phrase is negative
   def is_negative_phrase(token_array)
-
     token_type = POSITIVE
     unless token_array[1].nil?
       phrase = token_array[0]+' '+token_array[1]
