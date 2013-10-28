@@ -65,7 +65,6 @@ class SentenceState
 
     #initialize state variables so that the original sentence state is positive
     state = POSITIVE
-    interim_noun_verb  = false #0 indicates no interim nouns or verbs
     current_state = State.factory(state)
     prev_negative_word = false
 
@@ -78,16 +77,14 @@ class SentenceState
 
       #setting the prevNegativeWord
       NEGATIVE_EMPHASIS_WORDS.each do |e|
-        if(tokens[j].casecmp(e))
+        if tokens[j].casecmp(e)
           prev_negative_word = true
         end
       end
 
     end #end of for loop
 
-    state = current_state.get_state()
-
-    return state
+    current_state.get_state()
   end
 
   def get_token_type(current_tokens)
@@ -106,23 +103,23 @@ class SentenceState
     tokens = Array.new
     #tagged_tokens = Array.new
     #fetching all the tokens
+    trim_token_piece = lambda {|a,b| a[0..a.index(b)-1]}
+    replace_token_piece = lambda {|a,b| a.gsub(b,"")}
+    token_punctuation_methods = {"." => trim_token_piece, "," => replace_token_piece, '!' => replace_token_piece, ';' => replace_token_piece}
     for k in (0..st.length-1)
       ps = st[k]
       #setting the tagged string
       #tagged_tokens[i] = ps
-      if (ps.include?("/"))
-        ps = ps[0..ps.index("/")-1]
+
+      if ps.include?("/")
+        ps = trim_token_piece.call(ps, "/")
       end
-      #removing punctuations
-      if (ps.include?("."))
-        tokens[i] = ps[0..ps.index(".")-1]
-      elsif (ps.include?(","))
-        tokens[i] = ps.gsub(",", "")
-      elsif (ps.include?("!"))
-        tokens[i] = ps.gsub("!", "")
-      elsif (ps.include?(";"))
-        tokens[i] = ps.gsub(";", "")
-      else
+      token_punctuation_methods.each_pair do |t_key, t|
+        if ps.include?(t_key)
+          tokens[i] = t.call(ps, t_key)
+        end
+      end
+      if tokens[i].nil? or tokens[i] == ""
         tokens[i] = ps
         i+=1
       end
@@ -138,12 +135,12 @@ class SentenceState
     word = word_array.first
     not_negated = POSITIVE
     for i in (0..NEGATED_WORDS.length - 1)
-      if(word.casecmp(NEGATED_WORDS[i]) == 0)
+      if word.casecmp(NEGATED_WORDS[i]) == 0
         not_negated =  NEGATIVE_WORD #indicates negation found
         break
       end
     end
-    return not_negated
+    not_negated
   end
 #------------------------------------------#------------------------------------------
 
@@ -152,12 +149,12 @@ class SentenceState
     word = word_array.first
     not_negated = POSITIVE
     for i in (0..NEGATIVE_DESCRIPTORS.length - 1)
-      if(word.casecmp(NEGATIVE_DESCRIPTORS[i]) == 0)
+      if word.casecmp(NEGATIVE_DESCRIPTORS[i]) == 0
         not_negated =  NEGATIVE_DESCRIPTOR #indicates negation found
         break
       end
     end
-    return not_negated
+    not_negated
   end
 
 #------------------------------------------#------------------------------------------
@@ -169,14 +166,14 @@ class SentenceState
       phrase = word_array[0]+" "+word_array[1]
 
       for i in (0..NEGATIVE_PHRASES.length - 1)
-        if(phrase.casecmp(NEGATIVE_PHRASES[i]) == 0)
+        if phrase.casecmp(NEGATIVE_PHRASES[i]) == 0
           not_negated =  NEGATIVE_PHRASE #indicates negation found
           break
         end
       end
     end
 
-    return not_negated
+    not_negated
   end
 
 #------------------------------------------#------------------------------------------
@@ -186,12 +183,12 @@ class SentenceState
     not_suggestive = POSITIVE
     #puts "inside is_suggestive for token:: #{word}"
     for i in (0..SUGGESTIVE_WORDS.length - 1)
-      if(word.casecmp(SUGGESTIVE_WORDS[i]) == 0)
+      if word.casecmp(SUGGESTIVE_WORDS[i]) == 0
         not_suggestive =  SUGGESTIVE #indicates negation found
         break
       end
     end
-    return not_suggestive
+    not_suggestive
   end
 #------------------------------------------#------------------------------------------
 
@@ -201,13 +198,13 @@ class SentenceState
     if word_array.size > 1
       phrase = word_array[0]+" "+word_array[1]
       for i in (0..SUGGESTIVE_PHRASES.length - 1)
-        if(phrase.casecmp(SUGGESTIVE_PHRASES[i]) == 0)
+        if phrase.casecmp(SUGGESTIVE_PHRASES[i]) == 0
           not_suggestive =  SUGGESTIVE #indicates negation found
           break
         end
       end
     end
-    return not_suggestive
+    not_suggestive
   end
 
 end #end of the class
