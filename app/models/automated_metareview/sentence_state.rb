@@ -2,7 +2,14 @@ require 'automated_metareview/negations'
 require 'automated_metareview/constants'
 
 class SentenceState
-  #attr_accessor :broken_sentences
+  @interim_noun_verb
+  @state
+  @prev_negative_word
+
+  # Make a new state instance based on the type of the current_state
+  def factory(state)
+    {POSITIVE => PositiveState, NEGATIVE_DESCRIPTOR => NegativeDescriptorState, NEGATIVE_PHRASE => NegativePhraseState, SUGGESTIVE => SuggestiveState, NEGATIVE_WORD => NegativeWordState}[state].new()
+  end
   def identify_sentence_state(str_with_pos_tags)
     # puts("**** Inside identify_sentence_state #{str_with_pos_tags}")
     #break the sentence at the co-ordinating conjunction
@@ -19,18 +26,20 @@ class SentenceState
     states_array
   end #end of the methods
 
-  def sentence_state(tokens) #str_with_pos_tags)
+  def sentence_state(sentence_tokens) #str_with_pos_tags)
     #initialize state variables so that the original sentence state is positive
-    state = POSITIVE
-    current_state = State.factory(state)
+    @state = POSITIVE
+    current_state = factory(@state)
     prev_negative_word = false
-
-    tokens.each_with_next do |curr_token, next_token|
+    @interim_noun_verb = false
+    sentence_tokens.each_with_next do |curr_token, next_token|
       #get current token type
       current_token_type = get_token_type([curr_token, next_token])
 
       #Ask State class to get current state based on current state, current_token_type, and if there was a prev_negative_word
-      current_state = State.factory(current_state.next_state(current_token_type, prev_negative_word))
+      current_state = factory(current_state.next_state(current_token_type, prev_negative_word))
+      #@prev_negative_word = prev_negative_word
+
 
       #setting the prevNegativeWord
       NEGATIVE_EMPHASIS_WORDS.each do |e|
