@@ -4,6 +4,7 @@ require 'automated_metareview/constants'
 class SentenceState
   @interim_noun_verb
   @state
+
   @@prev_negative_word
 
   # Make a new state instance based on the type of the current_state
@@ -13,7 +14,7 @@ class SentenceState
 
   def identify_sentence_state(str_with_pos_tags)
     # puts("**** Inside identify_sentence_state #{str_with_pos_tags}")
-    #break the sentence at the co-ordinating conjunction
+    #ask TaggedSentence class to break the sentence at the co-ordinating conjunction
     sentence = TaggedSentence.new(str_with_pos_tags)
     sentences_sections = sentence.break_at_coord_conjunctions()
 
@@ -42,8 +43,6 @@ class SentenceState
 
       current_state = factory(current_state.next_state(current_token_type))
 
-
-
       #setting the prevNegativeWord
       NEGATIVE_EMPHASIS_WORDS.each do |e|
         if curr_token.casecmp(e)
@@ -54,10 +53,6 @@ class SentenceState
     end #end of for loop
 
     current_state.get_state()
-  end
-  def if_negative_emphasis(state1, state2)
-
-
   end
   def get_token_type(current_token)
     #type_methods = [self.method(:is_negative_word), self.method(:is_negative_descriptor), self.method(:is_suggestive), self.method(:is_negative_phrase), self.method(:is_suggestive_phrase)]
