@@ -44,98 +44,32 @@ class SentenceState
     current_state.get_state()
   end
   def get_token_type(current_token)
-    type_methods = [self.method(:is_negative_word), self.method(:is_negative_descriptor), self.method(:is_suggestive), self.method(:is_negative_phrase), self.method(:is_suggestive_phrase)]
+    #type_methods = [self.method(:is_negative_word), self.method(:is_negative_descriptor), self.method(:is_suggestive), self.method(:is_negative_phrase), self.method(:is_suggestive_phrase)]
+    is_word = lambda { |c| c[0]}
+    is_phrase = lambda do |c|
+      if c[1].nil?
+        nil
+      else
+        c[0]+' '+c[1]
+      end
+      end
+    types = {NEGATED_WORDS => [is_word, NEGATIVE_WORD], NEGATIVE_DESCRIPTORS => [is_word, NEGATIVE_DESCRIPTOR], SUGGESTIVE_WORDS => [is_word, SUGGESTIVE], NEGATIVE_PHRASES => [is_phrase,NEGATIVE_PHRASE], SUGGESTIVE_PHRASES => [is_phrase, SUGGESTIVE]}
     current_token_type = POSITIVE
-    type_methods.each do |what_type_is|
-      if current_token_type == POSITIVE
-        current_token_type = what_type_is.(current_token)
+    types.each do |type, w|
+      get_word_or_phrase = w[0]
+      word_or_phrase_type = w[1]
+      token = get_word_or_phrase.(current_token)
+      unless token.nil?
+        type.each do |t|
+            if token.casecmp(t) == 0
+              current_token_type = word_or_phrase_type
+              break
+            end
+        end
       end
     end
-
     current_token_type
   end
-
-
-
-#------------------------------------------#------------------------------------------
-
-#Checking if the token is a negative token
-  def is_negative_word(token_array)
-
-    token = token_array.first
-    token_type = POSITIVE
-    NEGATED_WORDS.each do |nw|
-      if token.casecmp(nw) == 0
-        token_type = NEGATIVE_WORD
-        break
-      end
-    end
-    token_type
-  end
-#------------------------------------------#------------------------------------------
-
-#Checking if the token is a negative token
-  def is_negative_descriptor(token_array)
-    token = token_array.first
-    token_type = POSITIVE
-    NEGATIVE_DESCRIPTORS.each do |nd|
-      if token.casecmp(nd) == 0
-        token_type =  NEGATIVE_DESCRIPTOR #indicates negation found
-        break
-      end
-    end
-    token_type
-  end
-
-#------------------------------------------#------------------------------------------
-
-#Checking if the phrase is negative
-  def is_negative_phrase(token_array)
-    token_type = POSITIVE
-    unless token_array[1].nil?
-      phrase = token_array[0]+' '+token_array[1]
-
-      NEGATIVE_PHRASES.each do |np|
-        if phrase.casecmp(np) == 0
-          token_type = NEGATIVE_PHRASE#indicates negation found
-          break
-        end
-      end
-    end
-    token_type
-  end
-
-#------------------------------------------#------------------------------------------
-#Checking if the token is a suggestive token
-  def is_suggestive(token_array)
-    token = token_array.first
-    token_type = POSITIVE
-    #puts "inside is_suggestive for token:: #{word}"
-    SUGGESTIVE_WORDS.each do |sw|
-      if token.casecmp(sw) == 0
-        token_type =  SUGGESTIVE #indicates negation found
-        break
-      end
-    end
-    token_type
-  end
-#------------------------------------------#------------------------------------------
-
-#Checking if the PHRASE is suggestive
-  def is_suggestive_phrase(token_array)
-    token_type = POSITIVE
-    unless token_array[1].nil?
-      phrase = token_array[0]+' '+token_array[1]
-      SUGGESTIVE_PHRASES.each do |sp|
-        if phrase.casecmp(sp) == 0
-          token_type = SUGGESTIVE #indicates negation found
-          break
-        end
-      end
-    end
-    token_type
-  end
-
 end #end of the class
 
 class Array
