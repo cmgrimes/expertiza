@@ -103,7 +103,7 @@ class SentenceState
     num_tokens = 0
     tokens = Array.new
 
-    punctuation = ['.', ',', '!', ';']
+    punctuation = %w(. , ! ;)
     sentence_pieces.each do |sp|
       #remove tag from sentence word
       if sp.include?('/')
