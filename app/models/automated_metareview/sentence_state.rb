@@ -141,11 +141,11 @@ class SentenceState
 #------------------------------------------#------------------------------------------
 
 #Checking if the token is a negative token
-  def is_negative_descriptor(word_array)
-    word = word_array.first
+  def is_negative_descriptor(token_array)
+    token = token_array.first
     not_negated = POSITIVE
-    for i in (0..NEGATIVE_DESCRIPTORS.length - 1)
-      if word.casecmp(NEGATIVE_DESCRIPTORS[i]) == 0
+    NEGATIVE_DESCRIPTORS.each do |nd|
+      if token.casecmp(nd) == 0
         not_negated =  NEGATIVE_DESCRIPTOR #indicates negation found
         break
       end
