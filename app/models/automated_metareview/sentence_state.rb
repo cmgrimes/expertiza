@@ -6,44 +6,42 @@ class SentenceState
   def identify_sentence_state(str_with_pos_tags)
     # puts("**** Inside identify_sentence_state #{str_with_pos_tags}")
     #break the sentence at the co-ordinating conjunction
-    num_conjunctions = break_at_coordinating_conjunctions(str_with_pos_tags)
+    num_conjunctions = break_at_coord_conjunctions(str_with_pos_tags)
 
     states_array = Array.new
-    if(@broken_sentences == nil)
+    if @broken_sentences.nil?
       states_array[0] = sentence_state(str_with_pos_tags)
       #identifying states for each of the sentence segments
     else
       for i in (0..num_conjunctions)
-        if(!@broken_sentences[i].nil?)
+        unless @broken_sentences[i].nil?
           states_array[i] = sentence_state(@broken_sentences[i])
         end
       end
     end
-    return states_array
+    states_array
   end #end of the methods
       #------------------------------------------#------------------------------------------
-  def break_at_coordinating_conjunctions(str_with_pos_tags)
-    st = str_with_pos_tags.split(" ")
-    count = st.length
+  def break_at_coord_conjunctions(str_with_pos_tags)
+    st = str_with_pos_tags.split(' ')
     counter = 0
 
     @broken_sentences = Array.new
     #if the sentence contains a co-ordinating conjunction
-    if(str_with_pos_tags.include?("CC"))
+    if str_with_pos_tags.include?('CC')
       counter = 0
-      temp = ""
-      for i in (0..count-1)
-        ps = st[i]
-        if(!ps.nil? and ps.include?("CC"))
+      temp = ''
+      st.each do |ps|
+        if !ps.nil? and ps.include?('CC')
           @broken_sentences[counter] = temp #for "run/NN on/IN..."
           counter+=1
-          temp = ps[0..ps.index("/")]
+          temp = ps[0..ps.index('/')]
           #the CC or IN goes as part of the following sentence
-        elsif (!ps.nil? and !ps.include?("CC"))
-          temp = temp +" "+ ps[0..ps.index("/")]
+        elsif !ps.nil? and !ps.include?('CC')
+          temp += ' '+ ps[0..ps.index('/')]
         end
       end
-      if(!temp.empty?) #setting the last sentence segment
+      unless temp.empty? #setting the last sentence segment
         @broken_sentences[counter] = temp
         counter+=1
       end
@@ -51,7 +49,7 @@ class SentenceState
       @broken_sentences[counter] = str_with_pos_tags
       counter+=1
     end
-    return counter
+    counter
   end #end of the method
       #------------------------------------------#------------------------------------------
 
@@ -59,25 +57,25 @@ class SentenceState
   def sentence_state(str_with_pos_tags)
 
     #checking single tokens for negated words
-    st = str_with_pos_tags.split(" ")
+    st = str_with_pos_tags.split(' ')
 
-    num_of_tokens, tokens = parse_sentence_tokens(st)
+    tokens = parse_sentence_tokens(st)
 
     #initialize state variables so that the original sentence state is positive
     state = POSITIVE
     current_state = State.factory(state)
     prev_negative_word = false
 
-    for j  in (0..num_of_tokens-1)
+    tokens.each_with_next do |curr_token, next_token|
       #get current token type
-      current_token_type = get_token_type(tokens[j..num_of_tokens-1])
+      current_token_type = get_token_type([curr_token, next_token])
 
-      #Have State class get current state based on current state, current_token_type, and if there was a prev_negative_word
+      #Ask State class to get current state based on current state, current_token_type, and if there was a prev_negative_word
       current_state = State.factory(current_state.next_state(current_token_type, prev_negative_word))
 
       #setting the prevNegativeWord
       NEGATIVE_EMPHASIS_WORDS.each do |e|
-        if tokens[j].casecmp(e)
+        if curr_token.casecmp(e)
           prev_negative_word = true
         end
       end
@@ -123,7 +121,7 @@ class SentenceState
       end
     end
     #end of the for loop
-    return num_tokens, tokens
+    tokens
   end
 
 #------------------------------------------#------------------------------------------
@@ -162,7 +160,7 @@ class SentenceState
   def is_negative_phrase(token_array)
 
     token_type = POSITIVE
-    if token_array.size > 1
+    unless token_array[1].nil?
       phrase = token_array[0]+' '+token_array[1]
 
       NEGATIVE_PHRASES.each do |np|
@@ -194,7 +192,7 @@ class SentenceState
 #Checking if the PHRASE is suggestive
   def is_suggestive_phrase(token_array)
     token_type = POSITIVE
-    if token_array.size > 1
+    unless token_array[1].nil?
       phrase = token_array[0]+' '+token_array[1]
       SUGGESTIVE_PHRASES.each do |sp|
         if phrase.casecmp(sp) == 0
@@ -207,3 +205,9 @@ class SentenceState
   end
 
 end #end of the class
+
+class Array
+  def each_with_next(&block)
+    [*self, nil].each_cons(2, &block)
+  end
+end
