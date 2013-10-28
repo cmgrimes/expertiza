@@ -87,14 +87,15 @@ class SentenceState
     current_state.get_state()
   end
 
-  def get_token_type(current_tokens)
+  def get_token_type(current_token)
     type_methods = [self.method(:is_negative_word), self.method(:is_negative_descriptor), self.method(:is_suggestive), self.method(:is_negative_phrase), self.method(:is_suggestive_phrase)]
     current_token_type = POSITIVE
     type_methods.each do |what_type_is|
       if current_token_type == POSITIVE
-        current_token_type = what_type_is.call(current_tokens)
+        current_token_type = what_type_is.(current_token)
       end
     end
+
     current_token_type
   end
 
@@ -105,14 +106,15 @@ class SentenceState
     punctuation = ['.', ',', '!', ';']
     sentence_pieces.each do |sp|
       #remove tag from sentence word
-      if sp.include?("/")
-        sp = sp[0..sp.index("/")-1]
+      if sp.include?('/')
+        sp = sp[0..sp.index('/')-1]
       end
 
       valid_token = true
       punctuation.each do |p|
         if sp.include?(p)
           valid_token = false
+          break
         end
       end
       if valid_token
@@ -127,80 +129,81 @@ class SentenceState
 #------------------------------------------#------------------------------------------
 
 #Checking if the token is a negative token
-  def is_negative_word(word_array)
-    word = word_array.first
-    not_negated = POSITIVE
-    for i in (0..NEGATED_WORDS.length - 1)
-      if word.casecmp(NEGATED_WORDS[i]) == 0
-        not_negated =  NEGATIVE_WORD #indicates negation found
+  def is_negative_word(token_array)
+
+    token = token_array.first
+    token_type = POSITIVE
+    NEGATED_WORDS.each do |nw|
+      if token.casecmp(nw) == 0
+        token_type = NEGATIVE_WORD
         break
       end
     end
-    not_negated
+    token_type
   end
 #------------------------------------------#------------------------------------------
 
 #Checking if the token is a negative token
   def is_negative_descriptor(token_array)
     token = token_array.first
-    not_negated = POSITIVE
+    token_type = POSITIVE
     NEGATIVE_DESCRIPTORS.each do |nd|
       if token.casecmp(nd) == 0
-        not_negated =  NEGATIVE_DESCRIPTOR #indicates negation found
+        token_type =  NEGATIVE_DESCRIPTOR #indicates negation found
         break
       end
     end
-    not_negated
+    token_type
   end
 
 #------------------------------------------#------------------------------------------
 
 #Checking if the phrase is negative
-  def is_negative_phrase(word_array)
-    not_negated = POSITIVE
-    if word_array.size > 1
-      phrase = word_array[0]+" "+word_array[1]
+  def is_negative_phrase(token_array)
 
-      for i in (0..NEGATIVE_PHRASES.length - 1)
-        if phrase.casecmp(NEGATIVE_PHRASES[i]) == 0
-          not_negated =  NEGATIVE_PHRASE #indicates negation found
+    token_type = POSITIVE
+    if token_array.size > 1
+      phrase = token_array[0]+' '+token_array[1]
+
+      NEGATIVE_PHRASES.each do |np|
+        if phrase.casecmp(np) == 0
+          token_type = NEGATIVE_PHRASE#indicates negation found
           break
         end
       end
     end
-
-    not_negated
+    token_type
   end
 
 #------------------------------------------#------------------------------------------
 #Checking if the token is a suggestive token
-  def is_suggestive(word_array)
-    word = word_array.first
-    not_suggestive = POSITIVE
+  def is_suggestive(token_array)
+    token = token_array.first
+    token_type = POSITIVE
     #puts "inside is_suggestive for token:: #{word}"
-    for i in (0..SUGGESTIVE_WORDS.length - 1)
-      if word.casecmp(SUGGESTIVE_WORDS[i]) == 0
-        not_suggestive =  SUGGESTIVE #indicates negation found
+    SUGGESTIVE_WORDS.each do |sw|
+      if token.casecmp(sw) == 0
+        token_type =  SUGGESTIVE #indicates negation found
         break
       end
     end
-    not_suggestive
+    token_type
   end
 #------------------------------------------#------------------------------------------
 
 #Checking if the PHRASE is suggestive
-  def is_suggestive_phrase(word_array)
-    not_suggestive = POSITIVE
-    if word_array.size > 1
-      phrase = word_array[0]+" "+word_array[1]
-      for i in (0..SUGGESTIVE_PHRASES.length - 1)
-        if phrase.casecmp(SUGGESTIVE_PHRASES[i]) == 0
-          not_suggestive =  SUGGESTIVE #indicates negation found
+  def is_suggestive_phrase(token_array)
+    token_type = POSITIVE
+    if token_array.size > 1
+      phrase = token_array[0]+' '+token_array[1]
+      SUGGESTIVE_PHRASES.each do |sp|
+        if phrase.casecmp(sp) == 0
+          token_type = SUGGESTIVE #indicates negation found
           break
         end
       end
     end
-    not_suggestive
+    token_type
   end
 
 end #end of the class
