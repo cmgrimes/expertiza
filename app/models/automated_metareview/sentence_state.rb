@@ -98,34 +98,30 @@ class SentenceState
     current_token_type
   end
 
-  def parse_sentence_tokens(st)
-    i = 0
+  def parse_sentence_tokens(sentence_pieces)
+    num_tokens = 0
     tokens = Array.new
-    #tagged_tokens = Array.new
-    #fetching all the tokens
-    trim_token_piece = lambda {|a,b| a[0..a.index(b)-1]}
-    replace_token_piece = lambda {|a,b| a.gsub(b,"")}
-    token_punctuation_methods = {"." => trim_token_piece, "," => replace_token_piece, '!' => replace_token_piece, ';' => replace_token_piece}
-    for k in (0..st.length-1)
-      ps = st[k]
-      #setting the tagged string
-      #tagged_tokens[i] = ps
 
-      if ps.include?("/")
-        ps = trim_token_piece.call(ps, "/")
+    punctuation = ['.', ',', '!', ';']
+    sentence_pieces.each do |sp|
+      #remove tag from sentence word
+      if sp.include?("/")
+        sp = sp[0..sp.index("/")-1]
       end
-      token_punctuation_methods.each_pair do |t_key, t|
-        if ps.include?(t_key)
-          tokens[i] = t.call(ps, t_key)
+
+      valid_token = true
+      punctuation.each do |p|
+        if sp.include?(p)
+          valid_token = false
         end
       end
-      if tokens[i].nil? or tokens[i] == ""
-        tokens[i] = ps
-        i+=1
+      if valid_token
+        tokens[num_tokens] = sp
+        num_tokens+=1
       end
     end
     #end of the for loop
-    return i, tokens
+    return num_tokens, tokens
   end
 
 #------------------------------------------#------------------------------------------
