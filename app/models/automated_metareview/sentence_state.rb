@@ -61,7 +61,7 @@ class SentenceState
     #checking single tokens for negated words
     st = str_with_pos_tags.split(" ")
 
-    num_of_tokens, tagged_tokens, tokens = parse_sentence_tokens(st)
+    num_of_tokens, tokens = parse_sentence_tokens(st)
 
     #initialize state variables so that the original sentence state is positive
     state = POSITIVE
@@ -104,12 +104,12 @@ class SentenceState
   def parse_sentence_tokens(st)
     i = 0
     tokens = Array.new
-    tagged_tokens = Array.new
+    #tagged_tokens = Array.new
     #fetching all the tokens
     for k in (0..st.length-1)
       ps = st[k]
       #setting the tagged string
-      tagged_tokens[i] = ps
+      #tagged_tokens[i] = ps
       if (ps.include?("/"))
         ps = ps[0..ps.index("/")-1]
       end
@@ -128,7 +128,7 @@ class SentenceState
       end
     end
     #end of the for loop
-    return i, tagged_tokens, tokens
+    return i, tokens
   end
 
 #------------------------------------------#------------------------------------------
