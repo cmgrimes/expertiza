@@ -8,11 +8,12 @@ class TaggedSentence
     num_tokens = 0
     tokens = Array.new
 
+    tag = '/'
     punctuation = %w(. , ! ;)
     sentence_pieces.each do |sp|
       #remove tag from sentence word
-      if sp.include?('/')
-        sp = sp[0..sp.index('/')-1]
+      if sp.include?(tag)
+        sp = sp[0..sp.index(tag)-1]
       end
 
       valid_token = true
