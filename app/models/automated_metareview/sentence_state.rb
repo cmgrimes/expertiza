@@ -9,16 +9,13 @@ class SentenceState
     num_conjunctions = break_at_coord_conjunctions(str_with_pos_tags)
 
     states_array = Array.new
-    if @broken_sentences.nil?
-      states_array[0] = sentence_state(str_with_pos_tags)
-      #identifying states for each of the sentence segments
-    else
-      for i in (0..num_conjunctions)
-        unless @broken_sentences[i].nil?
-          states_array[i] = sentence_state(@broken_sentences[i])
+    @broken_sentences.nil? ?
+        states_array[0] = sentence_state(str_with_pos_tags) :
+        (0..num_conjunctions).each do |i|
+          unless @broken_sentences[i].nil?
+            states_array[i] = sentence_state(@broken_sentences[i])
+          end
         end
-      end
-    end
     states_array
   end #end of the methods
       #------------------------------------------#------------------------------------------
