@@ -55,11 +55,12 @@ class SentenceState
     current_state.get_state()
   end
   def get_token_type(current_token)
-    #type_methods = [self.method(:is_negative_word), self.method(:is_negative_descriptor), self.method(:is_suggestive), self.method(:is_negative_phrase), self.method(:is_suggestive_phrase)]
-    is_word = lambda { |c| c[0]}
-    is_phrase = lambda {|c| c[1].nil? ? nil : c[0]+' '+c[1]}
+    #input parsers
+    get_word = lambda { |c| c[0]}
+    get_phrase = lambda {|c| c[1].nil? ? nil : c[0]+' '+c[1]}
 
-    types = {NEGATED_WORDS => [is_word, NEGATIVE_WORD], NEGATIVE_DESCRIPTORS => [is_word, NEGATIVE_DESCRIPTOR], SUGGESTIVE_WORDS => [is_word, SUGGESTIVE], NEGATIVE_PHRASES => [is_phrase,NEGATIVE_PHRASE], SUGGESTIVE_PHRASES => [is_phrase, SUGGESTIVE]}
+    #types holds relationships between word_or_phrase_array_of_type => [input parser of type, type]
+    types = {NEGATED_WORDS => [get_word, NEGATIVE_WORD], NEGATIVE_DESCRIPTORS => [get_word, NEGATIVE_DESCRIPTOR], SUGGESTIVE_WORDS => [get_word, SUGGESTIVE], NEGATIVE_PHRASES => [get_phrase,NEGATIVE_PHRASE], SUGGESTIVE_PHRASES => [get_phrase, SUGGESTIVE]}
     current_token_type = POSITIVE
     types.each do |word_or_phrase_array, type_definition|
       get_word_or_phrase, word_or_phrase_type = type_definition[0], type_definition[1]
